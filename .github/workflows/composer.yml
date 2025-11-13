@@ -1,0 +1,37 @@
+name: Composer Validation
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+
+jobs:
+  composer-install:
+    name: Validate (PHP ${{ matrix.php-version }})
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: read
+    
+    strategy:
+      matrix:
+        php-version: ['7.3', '7.4', '8.1', '8.2', '8.3']
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: ${{ matrix.php-version }}
+        extensions: bcmath, ctype, curl, dom, gd, hash, iconv, intl, mbstring, openssl, pdo_mysql, simplexml, soap, xsl, zip
+        tools: composer:v2
+        coverage: none
+    
+    - name: Validate composer.json
+      run: composer validate --no-check-all
+    
+    - name: Check PHP syntax
+      run: find . -name "*.php" -not -path "./vendor/*" -print0 | xargs -0 -n1 php -l
